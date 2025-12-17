@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-public class Menu<T> {
+public class Menu {
     boolean cameFromSubMenu;
     // Sort algorithms testcases:
     Integer[] unsortedNumbers = {8, 5, 19, 2, 100, 84, 22, 1};

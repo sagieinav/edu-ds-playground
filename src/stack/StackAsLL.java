@@ -15,7 +15,7 @@ public class StackAsLL<T extends Comparable<T>> {
     }
 
     public T pop() {
-        // 1. Handle empty list:
+        // 1. Handle empty stack:
         if (isEmpty()) return null;
 
         // 2. Get the first item and its' value:
@@ -33,9 +33,8 @@ public class StackAsLL<T extends Comparable<T>> {
         // 1. Handle empty list:
         if (isEmpty()) return null;
 
-        // 2. Get the first item and its' value:
-        Node<T> headNode = list.getHead();
-        T headValue = headNode.getValue();
+        // 2. Get the first item's value:
+        T headValue = list.getHead().getValue();
 
         // 3. Return the first item (value):
         return headValue;

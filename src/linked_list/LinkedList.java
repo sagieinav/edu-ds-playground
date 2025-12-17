@@ -3,6 +3,7 @@ import java.util.Iterator;
 
 public class LinkedList<T extends Comparable<T>> implements Iterable<Node<T>> {
     private Node<T> head;
+    private Node<T> tail;
     private int size; // Keeping track of the size, though all methods will NOT use this var, for learning purposes
 
     public LinkedList() {
@@ -16,6 +17,15 @@ public class LinkedList<T extends Comparable<T>> implements Iterable<Node<T>> {
 
     public void setHead(Node<T> head) {
         this.head = head;
+    }
+
+    public Node<T> getTail() {
+        return tail;
+    }
+
+    public void setTail(Node<T> tail) {
+        this.tail = tail;
+        tail.setNext(null); // Ensure it doesn't point to anything
     }
 
     public Node<T> getNext(T targetValue) {
@@ -43,7 +53,10 @@ public class LinkedList<T extends Comparable<T>> implements Iterable<Node<T>> {
         // 4. Point target's next to the new (inserted) node
         targetNode.setNext(newNode);
 
-        // 5. Increase the size tracker and return true (op successful)
+        // 5. Update new tail if target node is old tail
+        if (targetNode == tail) tail = newNode;
+
+        // 6. Increase the size tracker and return true (op successful)
         size++;
         return true;
     }
@@ -57,7 +70,10 @@ public class LinkedList<T extends Comparable<T>> implements Iterable<Node<T>> {
         // 4. Point target's next to the new (inserted) node
         targetNode.setNext(newNode);
 
-        // 5. Increase the size tracker and return true (op successful)
+        // 5. Update new tail if target node is old tail
+        if (targetNode == tail) tail = newNode;
+
+        // 6. Increase the size tracker and return true (op successful)
         size++;
         return true;
     }
@@ -75,27 +91,29 @@ public class LinkedList<T extends Comparable<T>> implements Iterable<Node<T>> {
     }
 
     public void addFirst(Node<T> newNode) {
+        // 1. Handle empty list: head is also tail
+        if (head == null) setTail(newNode);
+
+        // 2. Now set the new head
         newNode.setNext(head);
         head = newNode;
+
+        // 3. Increase size
         size++;
     }
 
     public void addFirst(T newValue) {
         Node<T> newNode = new Node<T>(null, newValue);
+
+        // 1. Handle empty list: head is also tail
+        if (head == null) setTail(newNode);
+
+        // 2. Now set the new head
         newNode.setNext(head);
         head = newNode;
+
+        // 3. Increase size
         size++;
-    }
-
-    public Node<T> findLast() { // More efficient, iterator is not needed here
-        if (head == null) return null; // Handle empty list. equivalent to (size == 0)
-
-        Node<T> lastNode = head; // Assume first is last for a list of size 1
-        while (lastNode.getNext() != null) {
-            lastNode = lastNode.getNext();
-        }
-
-        return lastNode;
     }
 
     public Node<T> findMiddle() { // Without using our size var
@@ -128,9 +146,8 @@ public class LinkedList<T extends Comparable<T>> implements Iterable<Node<T>> {
     public void addLast(Node<T> newNode) {
         if (head == null) addFirst(newNode); // Handle empty list. equivalent to (size == 0)
         else {
-            Node<T> lastNode = findLast();
-            lastNode.setNext(newNode);
-            newNode.setNext(null); // Ensure it doesn't point to anything
+            tail.setNext(newNode);
+            setTail(newNode);
             size++;
         }
     }
@@ -139,38 +156,69 @@ public class LinkedList<T extends Comparable<T>> implements Iterable<Node<T>> {
         if (head == null) addFirst(newValue); // Handle empty list. equivalent to (size == 0)
         else {
             Node<T> newNode = new Node<T>(null, newValue);
-            Node<T> lastNode = findLast();
-            lastNode.setNext(newNode);
+
+            tail.setNext(newNode);
+            setTail(newNode);
             size++;
         }
     }
     
     public boolean delete(T targetValue) {
-        if (head == null) return false; // Handle empty list
+        // Case 1: empty list
+        if (head == null) return false;
 
+        // Case 2: target is head
+        if (head.getValue().equals(targetValue)) {
+            // Case 2.1: head is tail (list size is 1)
+            if (head == tail) tail = null; // This empties the list of its last node
+
+            // Case 2.2: head is not tail (list size > 1)
+            head = head.getNext();
+            size--;
+            return true;
+        }
+
+        // Case 3: Target is not head
         Node<T> prevNode = getPrev(targetValue);
-        if (prevNode == null) { // Target node is head
-            head = head.getNext(); // if/when size is 1, head will just be set to null
-        }
-        else {
-            Node<T> targetNode = prevNode.getNext();
-            Node<T> nextNode = targetNode.getNext();
-            prevNode.setNext(nextNode);
-        }
+        if (prevNode == null) return false; // Somehow not found prev (even though its not head)
+
+        Node<T> targetNode = prevNode.getNext();
+
+        // Case 3.1: target is tail
+        if (targetNode == tail) tail = prevNode;
+
+        // Case 3.2: target is found, is not head, and is not tail
+        Node<T> nextNode = targetNode.getNext();
+        prevNode.setNext(nextNode);
         size--;
         return true;
     }
 
     public boolean delete(Node<T> targetNode) {
-        if (head == null) return false; // Case 1: empty list
-        if (targetNode == head) { // Case 2: target is head
-            head = targetNode.getNext(); // if/when size is 1, head will just be set to null
+        // Case 1: empty list
+        if (head == null) return false;
+
+        // Case 2: target is head
+        if (targetNode == head) {
+            // Case 2.1: head is tail (list size is 1)
+            if (head == tail) tail = null; // This empties the list of its last node
+
+            // Case 2.2: head is not tail (list size > 1)
+            head = head.getNext();
+            size--;
+            return true;
         }
-        else { // Case 3: Target is not head, size > 1
-            Node<T> prevNode = getPrev(targetNode);
-            Node<T> nextNode = targetNode.getNext(); // Might be null
-            prevNode.setNext(nextNode);
-        }
+
+        // Case 3: Target is not head
+        Node<T> prevNode = getPrev(targetNode);
+        if (prevNode == null) return false; // Somehow not found prev (even though its not head)
+
+        // Case 3.1: target is tail
+        if (targetNode == tail) tail = prevNode;
+
+        // Case 3.2: target is found, is not head, and is not tail
+        Node<T> nextNode = targetNode.getNext();
+        prevNode.setNext(nextNode);
         size--;
         return true;
     }
@@ -210,14 +258,6 @@ public class LinkedList<T extends Comparable<T>> implements Iterable<Node<T>> {
 
     public int getSize() {
         return this.size;
-//        // In case we didn't have a dedicated size variable:
-//        Iterator<Node<T>> iterator = iterator();
-//        int size = 0;
-//        while (iterator.hasNext()) {
-//            size++;
-//            iterator.next();
-//        }
-//        return size;
     }
 
     public boolean hasCycle() {
@@ -242,6 +282,52 @@ public class LinkedList<T extends Comparable<T>> implements Iterable<Node<T>> {
         }
         return sb.toString();
     }
+
+
+// ===== EDUCATIONAL-ONLY METHODS (NOT USEFUL) =====
+//    public Node<T> findTail() { // More efficient, iterator is not needed here
+//        if (head == null) return null; // Handle empty list. equivalent to (size == 0)
+//
+//        Node<T> lastNode = head; // Assume first is last for a list of size 1
+//        while (lastNode.getNext() != null) {
+//            lastNode = lastNode.getNext();
+//        }
+//
+//        return lastNode;
+//    }
+
+//    public int getSize() {
+//        // In case we didn't have a dedicated size variable:
+//        Iterator<Node<T>> iterator = iterator();
+//        int size = 0;
+//        while (iterator.hasNext()) {
+//            size++;
+//            iterator.next();
+//        }
+//        return size;
+//    }
+
+//    public void addLast(Node<T> newNode) {
+//        if (head == null) addFirst(newNode); // Handle empty list. equivalent to (size == 0)
+//        else {
+//            Node<T> lastNode = findTail();
+//            lastNode.setNext(newNode);
+//            newNode.setNext(null); // Ensure it doesn't point to anything
+//            size++;
+//        }
+//    }
+//
+//    public void addLast(T newValue) {
+//        if (head == null) addFirst(newValue); // Handle empty list. equivalent to (size == 0)
+//        else {
+//            Node<T> newNode = new Node<T>(null, newValue);
+//            Node<T> lastNode = findTail();
+//            lastNode.setNext(newNode);
+//            size++;
+//        }
+//    }
+
+
 
 
 // ===== ITERATOR =====
