@@ -19,7 +19,7 @@ public class QueueAsArray {
     }
 
     public boolean enqueue(int value) {
-        // Case 1: stack is full, cant push
+        // Case 1: stack is full, cant enqueue
         if (isFull())
             return false;
 
